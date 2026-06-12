@@ -1,28 +1,90 @@
 import 'package:flutter/material.dart';
+import '../../settings/presentation/settings_screen.dart';
 
 class MapScreen extends StatelessWidget {
-  const MapScreen({super.key});
+  final Function(bool) onToggleTheme;
+
+  const MapScreen({
+    super.key,
+    required this.onToggleTheme,
+  });
+
+  void _onMenuSelected(BuildContext context, String value) {
+    switch (value) {
+      case 'settings':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SettingsScreen(
+              onThemeToggle: onToggleTheme,
+            ),
+          ),
+        );
+        break;
+
+      case 'logout':
+        Navigator.pushReplacementNamed(context, '/login');
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
       appBar: AppBar(
-        title: const Text('Voz Urbana - Mapa Central'), 
-        backgroundColor: Colors.indigo,
+        title: const Text('Mapa de Ocorrências'),
+        backgroundColor: const Color(0xFF0033A0),
         foregroundColor: Colors.white,
+
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            onSelected: (value) => _onMenuSelected(context, value),
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'settings',
+                child: Text('Configurações'),
+              ),
+              PopupMenuItem(
+                value: 'logout',
+                child: Text('Sair'),
+              ),
+            ],
+          ),
+        ],
       ),
-      body: const Center(
+
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.map, size: 80, color: Colors.indigo),
-            SizedBox(height: 16),
-            Text(
-              'Aqui será renderizado o Google Maps', 
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Icon(
+              Icons.map,
+              size: 80,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            SizedBox(height: 8),
-            Text('Pins: Vermelho (Urgente) | Verde (Resolvido)'),
+
+            const SizedBox(height: 16),
+
+            Text(
+              'Aqui será renderizado o Google Maps',
+              textAlign: TextAlign.center,
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              'Pins: Vermelho (Urgente) | Verde (Resolvido)',
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium,
+            ),
           ],
         ),
       ),
