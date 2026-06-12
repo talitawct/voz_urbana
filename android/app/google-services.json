@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "173733442985",
+    "project_id": "voz-urbana-f417a",
+    "storage_bucket": "voz-urbana-f417a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:173733442985:android:9fc75ecc764f232d4580b8",
+        "android_client_info": {
+          "package_name": "com.example.voz_urbana"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYZ1wuV27Kez_rQOp7LbZOVhgr8bwlfZM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

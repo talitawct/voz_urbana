@@ -2,8 +2,20 @@ import 'package:flutter/material.dart';
 import 'features/map/presentation/map_screen.dart';
 import 'features/report/presentation/report_screen.dart';
 import 'features/feed/presentation/feed_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; // 1. Importe o Core do Firebase
+import 'firebase_options.dart'; // 2. Importe as opções que o comando gerou
 
-void main() {
+void main() async {
+  // 3. Garante que os plugins nativos do Flutter estejam prontos antes de ligar o Firebase
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // 4. Inicializa o Firebase usando as configurações automáticas
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // 5. Roda o seu aplicativo normalmente
   runApp(const VozUrbanaApp());
 }
 
