@@ -20,8 +20,11 @@ dependencies:
   # Banco de Dados e Persistência
   sqflite: ^2.3.0
   path: ^1.9.0
+  
   cloud_firestore: ^4.15.1
   firebase_core: ^2.25.4
+  firebase_auth: ^5.1.2
+  google_sign_in: ^6.2.1
 
   # Bônus (IA e APIs externas)
   tflite_flutter: ^0.10.4
