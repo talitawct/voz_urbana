@@ -1,64 +1,146 @@
 import 'package:flutter/material.dart';
 
-class FeedScreen extends StatelessWidget {
+import '../../../core/reports/report_repository.dart';
+import '../../../core/reports/urban_report.dart';
+
+class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
+
+  @override
+  State<FeedScreen> createState() => _FeedScreenState();
+}
+
+class _FeedScreenState extends State<FeedScreen> {
+  late Future<List<UrbanReport>> _reportsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _reportsFuture = ReportRepository.findAll();
+  }
+
+  void _reloadReports() {
+    setState(() {
+      _reportsFuture = ReportRepository.findAll();
+    });
+  }
+
+  IconData _categoryIcon(String category) {
+    return switch (category) {
+      'Buraco na via' => Icons.report_problem,
+      'Poste danificado' => Icons.electrical_services,
+      'Iluminação pública' => Icons.lightbulb,
+      'Lixo acumulado' => Icons.delete,
+      'Esgoto' => Icons.water_damage,
+      'Árvore caída' => Icons.park,
+      _ => Icons.campaign,
+    };
+  }
+
+  String _formatDate(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final year = date.year.toString();
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+
+    return '$day/$month/$year às $hour:$minute';
+  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    final List<Map<String, dynamic>> feed = [
-      {
-        'icon': Icons.lightbulb,
-        'color': Colors.green,
-        'title': 'Poste sem Luz na Rua 4',
-        'subtitle': 'Status: Resolvido',
-      },
-      {
-        'icon': Icons.report_problem,
-        'color': Colors.red,
-        'title': 'Buraco na Av. Principal',
-        'subtitle': 'Status: Urgente (Pendente)',
-      },
-    ];
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-
-      // ✔️ padrão visual igual outras telas
       appBar: AppBar(
         title: const Text('Ocorrências da Comunidade'),
         backgroundColor: const Color(0xFF0033A0),
         foregroundColor: Colors.white,
-        automaticallyImplyLeading: false, // 🔥 evita botão de voltar
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            onPressed: _reloadReports,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Atualizar',
+          ),
+        ],
       ),
+      body: FutureBuilder<List<UrbanReport>>(
+        future: _reportsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-      body: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: feed.length,
-        itemBuilder: (context, index) {
-          final item = feed[index];
-
-          return Card(
-            elevation: 2,
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            color: Theme.of(context).cardColor,
-            child: ListTile(
-              leading: Icon(
-                item['icon'],
-                color: item['color'],
-                size: 40,
-              ),
-              title: Text(
-                item['title'],
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Não foi possível carregar as denúncias salvas.',
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodyMedium,
                 ),
               ),
-              subtitle: Text(
-                item['subtitle'],
-                style: textTheme.bodyMedium,
+            );
+          }
+
+          final reports = snapshot.data ?? [];
+
+          if (reports.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Nenhuma denúncia registrada ainda.',
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodyLarge,
+                ),
               ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async => _reloadReports(),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: reports.length,
+              itemBuilder: (context, index) {
+                final report = reports[index];
+
+                return Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  color: Theme.of(context).cardColor,
+                  child: ListTile(
+                    leading: Icon(
+                      _categoryIcon(report.category),
+                      color: const Color(0xFF0033A0),
+                      size: 40,
+                    ),
+                    title: Text(
+                      report.category,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      [
+                        'Status: ${report.status}',
+                        'Criada em ${_formatDate(report.createdAt)}',
+                        'Local: ${report.latitude.toStringAsFixed(5)}, ${report.longitude.toStringAsFixed(5)}',
+                        if (report.description.isNotEmpty)
+                          'Descrição: ${report.description}',
+                      ].join('\n'),
+                      style: textTheme.bodyMedium,
+                    ),
+                    isThreeLine: true,
+                  ),
+                );
+              },
             ),
           );
         },

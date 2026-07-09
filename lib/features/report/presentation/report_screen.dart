@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/reports/report_repository.dart';
+import '../../../core/reports/urban_report.dart';
+
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
 
@@ -14,6 +17,7 @@ class ReportScreen extends StatefulWidget {
 
 class _ReportScreenState extends State<ReportScreen> {
   final ImagePicker _picker = ImagePicker();
+  final _descriptionController = TextEditingController();
 
   File? _image;
   String? _categoria;
@@ -21,6 +25,7 @@ class _ReportScreenState extends State<ReportScreen> {
   String _locationStatus = 'Obtendo localização atual...';
   bool _isTakingPhoto = false;
   bool _isLoadingLocation = false;
+  bool _isSending = false;
 
   @override
   void initState() {
@@ -29,6 +34,12 @@ class _ReportScreenState extends State<ReportScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _capturarLocalizacaoAtual();
     });
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   Future<void> _tirarFoto() async {
@@ -144,6 +155,85 @@ class _ReportScreenState extends State<ReportScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  Future<void> _enviarDenuncia() async {
+    final image = _image;
+    final category = _categoria;
+    final position = _currentPosition;
+
+    if (image == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tire uma foto antes de enviar a denúncia.'),
+        ),
+      );
+      return;
+    }
+
+    if (category == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecione uma categoria.'),
+        ),
+      );
+      return;
+    }
+
+    if (position == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registre a localização antes de enviar a denúncia.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSending = true;
+    });
+
+    try {
+      await ReportRepository.save(
+        UrbanReport(
+          category: category,
+          description: _descriptionController.text.trim(),
+          imagePath: image.path,
+          latitude: position.latitude,
+          longitude: position.longitude,
+          status: 'Pendente',
+          createdAt: DateTime.now(),
+        ),
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _image = null;
+        _categoria = null;
+        _descriptionController.clear();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Denúncia salva com sucesso!'),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível salvar a denúncia. Tente novamente.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
+    }
   }
 
   @override
@@ -346,6 +436,7 @@ class _ReportScreenState extends State<ReportScreen> {
               const SizedBox(height: 8),
 
               TextField(
+                controller: _descriptionController,
                 maxLines: 3,
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
@@ -361,47 +452,20 @@ class _ReportScreenState extends State<ReportScreen> {
                   width: 250,
                   height: 50,
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      if (_image == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Tire uma foto antes de enviar a denúncia.'),
-                          ),
-                        );
-                        return;
-                      }
-
-                      if (_categoria == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Selecione uma categoria.'),
-                          ),
-                        );
-                        return;
-                      }
-
-                      if (_currentPosition == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Registre a localização antes de enviar a denúncia.',
+                    onPressed: _isSending ? null : _enviarDenuncia,
+                    icon: _isSending
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
                             ),
-                          ),
-                        );
-                        return;
-                      }
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Denúncia enviada com sucesso!'),
-                        ),
-                      );
-
-                      // Aqui futuramente será feita a gravação
-                      // da denúncia no banco de dados/Firebase/API.
-                    },
-                    icon: const Icon(Icons.send),
-                    label: const Text('Enviar Denúncia'),
+                          )
+                        : const Icon(Icons.send),
+                    label: Text(
+                      _isSending ? 'Enviando...' : 'Enviar Denúncia',
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0033A0),
                       foregroundColor: Colors.white,
