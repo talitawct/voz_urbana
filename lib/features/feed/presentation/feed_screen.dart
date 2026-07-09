@@ -111,11 +111,64 @@ class _FeedScreenState extends State<FeedScreen> {
                       ? 'Sem descrição informada.'
                       : report.description,
                 ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: report.id == null
+                      ? null
+                      : () => _confirmDeleteReport(context, report),
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Excluir denúncia'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red.shade700,
+                  ),
+                ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Future<void> _confirmDeleteReport(
+    BuildContext bottomSheetContext,
+    UrbanReport report,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Excluir denúncia?'),
+          content: const Text(
+            'Esta ação remove o registro do histórico e do mapa neste dispositivo.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Excluir'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || report.id == null) return;
+
+    await ReportRepository.deleteById(report.id!);
+
+    if (!mounted || !bottomSheetContext.mounted) return;
+
+    Navigator.pop(bottomSheetContext);
+    _reloadReports();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Denúncia excluída.'),
+      ),
     );
   }
 

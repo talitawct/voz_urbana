@@ -62,4 +62,14 @@ class ReportRepository {
 
     return rows.map(UrbanReport.fromMap).toList();
   }
+
+  static Future<void> deleteById(int id) async {
+    final db = await _db;
+
+    await db.delete(
+      _reportsTable,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 }
