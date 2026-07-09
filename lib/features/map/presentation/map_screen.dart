@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/auth/auth_service.dart';
@@ -24,11 +27,15 @@ class _MapScreenState extends State<MapScreen> {
   static const LatLng _fallbackLocation = LatLng(-12.9777, -38.5016);
 
   final MapController _mapController = MapController();
+  final TextEditingController _searchController = TextEditingController();
   LatLng _currentLocation = _fallbackLocation;
+  LatLng? _searchedLocation;
+  String? _searchedLocationLabel;
   List<UrbanReport> _reports = [];
   String? _locationError;
   bool _isLoadingLocation = true;
   bool _isLoadingReports = true;
+  bool _isSearching = false;
   bool _isMapReady = false;
 
   List<Marker> get _markers => [
@@ -46,6 +53,20 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
         ),
+        if (_searchedLocation != null)
+          Marker(
+            point: _searchedLocation!,
+            width: 48,
+            height: 48,
+            child: Tooltip(
+              message: _searchedLocationLabel ?? 'Local pesquisado',
+              child: const Icon(
+                Icons.place,
+                color: Color(0xFFFFC107),
+                size: 42,
+              ),
+            ),
+          ),
         ..._reports.map(_reportMarker),
       ];
 
@@ -75,6 +96,12 @@ class _MapScreenState extends State<MapScreen> {
         Navigator.pushReplacementNamed(context, '/login');
         break;
     }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCurrentLocation() async {
@@ -167,6 +194,86 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  Future<void> _searchPlace(String rawQuery) async {
+    final query = rawQuery.trim();
+    if (query.length < 3) {
+      _showSnackBar('Digite pelo menos 3 caracteres para pesquisar.');
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      _isSearching = true;
+    });
+
+    try {
+      final uri = Uri.https('nominatim.openstreetmap.org', '/search', {
+        'format': 'jsonv2',
+        'q': query,
+        'countrycodes': 'br',
+        'limit': '1',
+        'addressdetails': '1',
+      });
+
+      final response = await http.get(
+        uri,
+        headers: const {
+          'Accept': 'application/json',
+          'Accept-Language': 'pt-BR,pt;q=0.9',
+          'User-Agent':
+              'VozUrbana/1.0 (academic project; contact: talitawct3@gmail.com)',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        _showSnackBar('Não foi possível pesquisar agora. Tente novamente.');
+        return;
+      }
+
+      final results = jsonDecode(response.body);
+      if (results is! List || results.isEmpty) {
+        _showSnackBar('Nenhum local encontrado para "$query".');
+        return;
+      }
+
+      final firstResult = results.first;
+      if (firstResult is! Map<String, dynamic>) {
+        _showSnackBar('Resultado de busca inválido.');
+        return;
+      }
+
+      final latitude = double.tryParse(firstResult['lat']?.toString() ?? '');
+      final longitude = double.tryParse(firstResult['lon']?.toString() ?? '');
+      if (latitude == null || longitude == null) {
+        _showSnackBar('Resultado de busca sem coordenadas.');
+        return;
+      }
+
+      final location = LatLng(latitude, longitude);
+      final label = firstResult['display_name']?.toString() ?? query;
+
+      if (!mounted) return;
+
+      setState(() {
+        _searchedLocation = location;
+        _searchedLocationLabel = label;
+      });
+
+      _moveCamera(location, zoom: 16);
+      _showSnackBar('Local encontrado: ${_shortPlaceName(label)}');
+    } catch (_) {
+      if (!mounted) return;
+      _showSnackBar('Erro ao pesquisar local. Verifique sua conexão.');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSearching = false;
+        });
+      }
+    }
+  }
+
   Marker _reportMarker(UrbanReport report) {
     return Marker(
       point: LatLng(report.latitude, report.longitude),
@@ -225,6 +332,13 @@ class _MapScreenState extends State<MapScreen> {
     return '${description.substring(0, 33)}...';
   }
 
+  String _shortPlaceName(String placeName) {
+    final parts = placeName.split(',');
+    if (parts.length <= 2) return placeName;
+
+    return '${parts[0].trim()}, ${parts[1].trim()}';
+  }
+
   void _setLocationFallback(String message) {
     if (!mounted) return;
 
@@ -236,10 +350,18 @@ class _MapScreenState extends State<MapScreen> {
     _moveCamera(_fallbackLocation);
   }
 
-  void _moveCamera(LatLng location) {
+  void _moveCamera(LatLng location, {double zoom = 15}) {
     if (!_isMapReady) return;
 
-    _mapController.move(location, 15);
+    _mapController.move(location, zoom);
+  }
+
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -312,9 +434,27 @@ class _MapScreenState extends State<MapScreen> {
             left: 16,
             right: 16,
             child: TextField(
+              controller: _searchController,
+              enabled: !_isSearching,
+              textInputAction: TextInputAction.search,
+              onSubmitted: _searchPlace,
               decoration: InputDecoration(
                 hintText: 'Pesquisar localidade...',
                 prefixIcon: const Icon(Icons.search),
+                suffixIcon: _isSearching
+                    ? const Padding(
+                        padding: EdgeInsets.all(14),
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : IconButton(
+                        tooltip: 'Pesquisar',
+                        icon: const Icon(Icons.arrow_forward),
+                        onPressed: () => _searchPlace(_searchController.text),
+                      ),
                 filled: true,
                 fillColor: Theme.of(context).cardColor,
                 border: OutlineInputBorder(
