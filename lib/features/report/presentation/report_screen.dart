@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/email/email_service.dart';
 import '../../../core/reports/report_repository.dart';
 import '../../../core/reports/urban_report.dart';
 
@@ -194,17 +195,25 @@ class _ReportScreenState extends State<ReportScreen> {
     });
 
     try {
-      await ReportRepository.save(
-        UrbanReport(
-          category: category,
-          description: _descriptionController.text.trim(),
-          imagePath: image.path,
-          latitude: position.latitude,
-          longitude: position.longitude,
-          status: 'Pendente',
-          createdAt: DateTime.now(),
-        ),
+      final report = UrbanReport(
+        category: category,
+        description: _descriptionController.text.trim(),
+        imagePath: image.path,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        status: 'Pendente',
+        createdAt: DateTime.now(),
       );
+
+      await ReportRepository.save(report);
+
+      var emailSent = true;
+
+      try {
+        await EmailService.sendReportEmail(report);
+      } catch (_) {
+        emailSent = false;
+      }
 
       if (!mounted) return;
 
@@ -215,8 +224,12 @@ class _ReportScreenState extends State<ReportScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Denúncia salva com sucesso!'),
+        SnackBar(
+          content: Text(
+            emailSent
+                ? 'Denúncia salva e e-mail enviado ao órgão responsável.'
+                : 'Denúncia salva, mas não foi possível enviar o e-mail.',
+          ),
         ),
       );
     } catch (_) {
