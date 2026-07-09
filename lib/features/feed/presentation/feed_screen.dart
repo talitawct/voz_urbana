@@ -112,6 +112,26 @@ class _FeedScreenState extends State<FeedScreen> {
                       : report.description,
                 ),
                 const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: report.id == null
+                      ? null
+                      : () => _toggleReportStatus(context, report),
+                  icon: Icon(
+                    report.status == 'Resolvido'
+                        ? Icons.pending_actions
+                        : Icons.check_circle_outline,
+                  ),
+                  label: Text(
+                    report.status == 'Resolvido'
+                        ? 'Marcar como pendente'
+                        : 'Marcar como resolvida',
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0033A0),
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: report.id == null
                       ? null
@@ -127,6 +147,32 @@ class _FeedScreenState extends State<FeedScreen> {
           ),
         );
       },
+    );
+  }
+
+  Future<void> _toggleReportStatus(
+    BuildContext bottomSheetContext,
+    UrbanReport report,
+  ) async {
+    final id = report.id;
+    if (id == null) return;
+
+    final newStatus = report.status == 'Resolvido' ? 'Pendente' : 'Resolvido';
+
+    await ReportRepository.updateStatus(
+      id: id,
+      status: newStatus,
+    );
+
+    if (!mounted || !bottomSheetContext.mounted) return;
+
+    Navigator.pop(bottomSheetContext);
+    _reloadReports();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Denúncia marcada como $newStatus.'),
+      ),
     );
   }
 

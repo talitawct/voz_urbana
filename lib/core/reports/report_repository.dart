@@ -72,4 +72,18 @@ class ReportRepository {
       whereArgs: [id],
     );
   }
+
+  static Future<void> updateStatus({
+    required int id,
+    required String status,
+  }) async {
+    final db = await _db;
+
+    await db.update(
+      _reportsTable,
+      {'status': status},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 }
