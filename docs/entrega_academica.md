@@ -60,7 +60,7 @@ orgao responsavel.
 
 ## Configuracoes externas necessarias
 
-- Substituir `SUA_CHAVE_GOOGLE_MAPS_AQUI` por uma chave valida da Google Maps API.
+- Confirmar conexao com internet para carregar o mapa OpenStreetMap.
 - Confirmar o primeiro e-mail recebido pelo FormSubmit, caso a plataforma solicite.
 - Rodar o app em dispositivo/emulador com camera e localizacao habilitadas.
 

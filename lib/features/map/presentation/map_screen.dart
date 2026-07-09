@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/auth/auth_service.dart';
 import '../../../core/reports/report_repository.dart';
@@ -22,38 +23,37 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   static const LatLng _fallbackLocation = LatLng(-12.9777, -38.5016);
 
-  GoogleMapController? _mapController;
+  final MapController _mapController = MapController();
   LatLng _currentLocation = _fallbackLocation;
   List<UrbanReport> _reports = [];
   String? _locationError;
-  bool _hasLocationPermission = false;
   bool _isLoadingLocation = true;
   bool _isLoadingReports = true;
+  bool _isMapReady = false;
 
-  Set<Marker> get _markers => {
+  List<Marker> get _markers => [
         Marker(
-          markerId: const MarkerId('usuario_atual'),
-          position: _currentLocation,
-          infoWindow: const InfoWindow(
-            title: 'Sua localização',
-            snippet: 'Ponto usado para registrar novas denúncias.',
+          point: _currentLocation,
+          width: 44,
+          height: 44,
+          child: const Tooltip(
+            message:
+                'Sua localização\nPonto usado para registrar novas denúncias.',
+            child: Icon(
+              Icons.my_location,
+              color: Color(0xFF0033A0),
+              size: 34,
+            ),
           ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
         ),
         ..._reports.map(_reportMarker),
-      };
+      ];
 
   @override
   void initState() {
     super.initState();
     _loadCurrentLocation();
     _loadReports();
-  }
-
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
   }
 
   void _onMenuSelected(BuildContext context, String value) {
@@ -121,10 +121,9 @@ class _MapScreenState extends State<MapScreen> {
 
       setState(() {
         _currentLocation = location;
-        _hasLocationPermission = true;
       });
 
-      await _moveCamera(location);
+      _moveCamera(location);
     } catch (_) {
       _setLocationFallback(
         'Não foi possível obter sua localização. O mapa abriu em Salvador como referência.',
@@ -170,27 +169,40 @@ class _MapScreenState extends State<MapScreen> {
 
   Marker _reportMarker(UrbanReport report) {
     return Marker(
-      markerId: MarkerId(
-        'denuncia_${report.id ?? report.createdAt.microsecondsSinceEpoch}',
-      ),
-      position: LatLng(report.latitude, report.longitude),
-      infoWindow: InfoWindow(
-        title: report.category,
-        snippet:
-            '${report.status} - ${_formatDate(report.createdAt)} - ${_shortDescription(report)}',
-      ),
-      icon: BitmapDescriptor.defaultMarkerWithHue(
-        _markerHue(report.status),
+      point: LatLng(report.latitude, report.longitude),
+      width: 48,
+      height: 48,
+      child: GestureDetector(
+        onTap: () => _showReportMarkerDetails(report),
+        child: Tooltip(
+          message:
+              '${report.category}\n${report.status} - ${_formatDate(report.createdAt)} - ${_shortDescription(report)}',
+          child: Icon(
+            Icons.location_on,
+            color: _markerColor(report.status),
+            size: 42,
+          ),
+        ),
       ),
     );
   }
 
-  double _markerHue(String status) {
+  Color _markerColor(String status) {
     if (status.toLowerCase() == 'resolvido') {
-      return BitmapDescriptor.hueGreen;
+      return const Color(0xFF2E7D32);
     }
 
-    return BitmapDescriptor.hueRed;
+    return const Color(0xFFD32F2F);
+  }
+
+  void _showReportMarkerDetails(UrbanReport report) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${report.category} - ${report.status} - ${_formatDate(report.createdAt)}',
+        ),
+      ),
+    );
   }
 
   String _formatDate(DateTime date) {
@@ -219,24 +231,15 @@ class _MapScreenState extends State<MapScreen> {
     setState(() {
       _currentLocation = _fallbackLocation;
       _locationError = message;
-      _hasLocationPermission = false;
     });
 
     _moveCamera(_fallbackLocation);
   }
 
-  Future<void> _moveCamera(LatLng location) async {
-    final controller = _mapController;
-    if (controller == null) return;
+  void _moveCamera(LatLng location) {
+    if (!_isMapReady) return;
 
-    await controller.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: location,
-          zoom: 15,
-        ),
-      ),
-    );
+    _mapController.move(location, 15);
   }
 
   @override
@@ -267,20 +270,42 @@ class _MapScreenState extends State<MapScreen> {
       ),
       body: Stack(
         children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: _currentLocation,
-              zoom: 14,
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: _currentLocation,
+              initialZoom: 14,
+              minZoom: 4,
+              maxZoom: 18,
+              onMapReady: () {
+                _isMapReady = true;
+                _moveCamera(_currentLocation);
+              },
             ),
-            markers: _markers,
-            myLocationEnabled: _hasLocationPermission,
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            mapToolbarEnabled: false,
-            onMapCreated: (controller) {
-              _mapController = controller;
-              _moveCamera(_currentLocation);
-            },
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'voz_urbana',
+              ),
+              MarkerLayer(markers: _markers),
+            ],
+          ),
+          Positioned(
+            left: 8,
+            bottom: 8,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor.withValues(alpha: 0.86),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                child: Text(
+                  '(c) OpenStreetMap contributors',
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              ),
+            ),
           ),
           Positioned(
             top: 16,

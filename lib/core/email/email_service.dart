@@ -13,7 +13,7 @@ class EmailService {
   static Future<void> sendReportEmail(UrbanReport report) async {
     final currentUser = AuthService.currentUser;
     final mapsUrl =
-        'https://www.google.com/maps/search/?api=1&query=${report.latitude},${report.longitude}';
+        'https://www.openstreetmap.org/?mlat=${report.latitude}&mlon=${report.longitude}#map=18/${report.latitude}/${report.longitude}';
 
     final response = await http
         .post(
@@ -34,7 +34,7 @@ class EmailService {
                 : report.description,
             'latitude': report.latitude.toStringAsFixed(6),
             'longitude': report.longitude.toStringAsFixed(6),
-            'localizacao_google_maps': mapsUrl,
+            'localizacao_mapa': mapsUrl,
             'foto_no_dispositivo': report.imagePath,
             'data_registro': report.createdAt.toIso8601String(),
             'usuario_nome': currentUser?.name ?? 'Usuário não identificado',

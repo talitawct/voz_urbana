@@ -15,7 +15,8 @@ dependencies:
 
   # Recursos do dispositivo e mapa
   geolocator: ^11.1.0
-  google_maps_flutter: ^2.6.0
+  flutter_map: ^8.3.1
+  latlong2: ^0.10.1
 
   # Banco de dados e persistência
   sqflite: ^2.3.0

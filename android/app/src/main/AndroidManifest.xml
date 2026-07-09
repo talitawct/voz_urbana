@@ -12,10 +12,6 @@
         android:label="voz_urbana"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="SUA_CHAVE_GOOGLE_MAPS_AQUI" />
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
