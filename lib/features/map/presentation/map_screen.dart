@@ -176,7 +176,8 @@ class _MapScreenState extends State<MapScreen> {
       position: LatLng(report.latitude, report.longitude),
       infoWindow: InfoWindow(
         title: report.category,
-        snippet: 'Status: ${report.status}',
+        snippet:
+            '${report.status} - ${_formatDate(report.createdAt)} - ${_shortDescription(report)}',
       ),
       icon: BitmapDescriptor.defaultMarkerWithHue(
         _markerHue(report.status),
@@ -190,6 +191,26 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     return BitmapDescriptor.hueRed;
+  }
+
+  String _formatDate(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+
+    return '$day/$month $hour:$minute';
+  }
+
+  String _shortDescription(UrbanReport report) {
+    if (report.description.trim().isEmpty) {
+      return 'Sem descrição';
+    }
+
+    final description = report.description.trim();
+    if (description.length <= 36) return description;
+
+    return '${description.substring(0, 33)}...';
   }
 
   void _setLocationFallback(String message) {
