@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -15,17 +16,48 @@ class _ReportScreenState extends State<ReportScreen> {
 
   File? _image;
   String? _categoria;
+  bool _isTakingPhoto = false;
 
   Future<void> _tirarFoto() async {
-    final XFile? foto = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 85,
-    );
+    setState(() {
+      _isTakingPhoto = true;
+    });
 
-    if (foto != null) {
-      setState(() {
-        _image = File(foto.path);
-      });
+    try {
+      final XFile? foto = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+      );
+
+      if (!mounted) return;
+
+      if (foto != null) {
+        setState(() {
+          _image = File(foto.path);
+        });
+      }
+    } on PlatformException catch (error) {
+      if (!mounted) return;
+
+      final message = switch (error.code) {
+        'camera_access_denied' =>
+          'Permissão da câmera negada. Autorize o acesso para registrar a denúncia.',
+        'camera_access_restricted' =>
+          'O acesso à câmera está restrito neste dispositivo.',
+        'camera_unavailable' =>
+          'Não foi possível acessar a câmera deste dispositivo.',
+        _ => 'Não foi possível abrir a câmera. Tente novamente.',
+      };
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTakingPhoto = false;
+        });
+      }
     }
   }
 
@@ -72,7 +104,7 @@ class _ReportScreenState extends State<ReportScreen> {
               const SizedBox(height: 20),
 
               Text(
-                'Posicione corretamente seu smartphone para tirar uma boa foto.',
+                'Posicione corretamente seu smartphone para tirar uma boa foto. O sistema solicitará sua permissão para acessar a câmera.',
                 textAlign: TextAlign.center,
                 style: textTheme.bodyMedium,
               ),
@@ -84,9 +116,20 @@ class _ReportScreenState extends State<ReportScreen> {
                   width: 250,
                   height: 50,
                   child: ElevatedButton.icon(
-                    onPressed: _tirarFoto,
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Tirar Foto'),
+                    onPressed: _isTakingPhoto ? null : _tirarFoto,
+                    icon: _isTakingPhoto
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.camera_alt),
+                    label: Text(
+                      _isTakingPhoto ? 'Abrindo...' : 'Tirar Foto',
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0033A0),
                       foregroundColor: Colors.white,
