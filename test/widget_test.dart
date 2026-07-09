@@ -4,17 +4,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:voz_urbana/main.dart';
 
 void main() {
-  testWidgets('App inicia corretamente', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('App abre tela inicial e navega para login', (tester) async {
     await tester.pumpWidget(const VozUrbanaApp());
-
-    // Aguarda renderização
     await tester.pumpAndSettle();
 
-    // Verifica se o MaterialApp foi carregado
     expect(find.byType(MaterialApp), findsOneWidget);
+    expect(find.text('Entrar'), findsOneWidget);
+    expect(find.text('Cadastrar Grátis'), findsOneWidget);
 
-    // Verifica se a tela inicial (WelcomeScreen) aparece
-    expect(find.byType(Scaffold), findsWidgets);
+    await tester.tap(find.text('Entrar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bem-vindo de volta!'), findsOneWidget);
+    expect(find.text('Entrar com Google'), findsOneWidget);
+    expect(find.text('Entrar com Gov.br'), findsOneWidget);
   });
 }
