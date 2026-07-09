@@ -69,11 +69,13 @@ void initState() {
 
 Future<void> carregarEstados() async {
   try {
-    final response = await http.get(
-      Uri.parse(
-        'https://servicodados.ibge.gov.br/api/v1/localidades/estados',
-      ),
-    );
+    final response = await http
+        .get(
+          Uri.parse(
+            'https://servicodados.ibge.gov.br/api/v1/localidades/estados',
+          ),
+        )
+        .timeout(const Duration(seconds: 8));
 
     if (response.statusCode != 200 || !mounted) return;
 
@@ -99,11 +101,13 @@ Future<void> carregarEstados() async {
 
 Future<void> carregarCidades(String uf) async {
   try {
-    final response = await http.get(
-      Uri.parse(
-        'https://servicodados.ibge.gov.br/api/v1/localidades/estados/$uf/municipios',
-      ),
-    );
+    final response = await http
+        .get(
+          Uri.parse(
+            'https://servicodados.ibge.gov.br/api/v1/localidades/estados/$uf/municipios',
+          ),
+        )
+        .timeout(const Duration(seconds: 8));
 
     if (response.statusCode != 200 || !mounted) {
       _usarCidadesFallback(uf);

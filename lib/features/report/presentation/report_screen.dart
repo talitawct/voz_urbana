@@ -123,6 +123,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 12),
       );
 
       if (!mounted) return;
