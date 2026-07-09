@@ -1,17 +1,51 @@
-# voz_urbana
+# Voz Urbana
 
-A new Flutter project.
+Aplicativo Flutter para registro de problemas urbanos como buracos, falta de
+iluminacao, lixo acumulado, esgoto e outras ocorrencias de infraestrutura.
 
-## Getting Started
+## Recursos implementados
 
-This project is a starting point for a Flutter application.
+- Cadastro e login demonstrativos com validacoes minimas.
+- Login rapido pelos botoes Google e Gov.br usando usuarios de teste.
+- Captura de foto da denuncia com permissao de camera.
+- Captura automatica da localizacao com permissao de GPS.
+- Persistencia local das denuncias com SQLite.
+- Historico de denuncias salvas.
+- Mapa com Google Maps, localizacao atual e marcadores das denuncias salvas.
+- Envio de e-mail demonstrativo para `talitawct3@gmail.com` via FormSubmit.
+- Tema claro/escuro e tela de perfil basica.
 
-A few resources to get you started if this is your first Flutter project:
+## Usuario de teste
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Login por e-mail:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- E-mail: `teste@vozurbana.com`
+- Senha: `123456`
+
+Os botoes "Entrar com Google" e "Entrar com Gov.br" fazem login automatico com
+usuarios demonstrativos para apresentacao academica.
+
+## Configuracao do Google Maps
+
+Substitua `SUA_CHAVE_GOOGLE_MAPS_AQUI` por uma chave valida da Google Maps API:
+
+- Android: `android/app/src/main/AndroidManifest.xml`
+- iOS: `ios/Runner/AppDelegate.swift`
+
+Sem essa chave, a tela de mapa pode nao renderizar corretamente.
+
+## Observacao sobre envio de e-mail
+
+O envio usa FormSubmit para manter o projeto simples e sem backend. No primeiro
+envio, o destinatario pode precisar confirmar a ativacao recebida por e-mail.
+
+## Execucao
+
+```bash
+flutter pub get
+flutter run
+```
+
+No ambiente atual, a instalacao local do Flutter via Snap pode bloquear comandos
+com erro de AppArmor. Nesse caso, use uma instalacao Flutter fora do Snap ou
+habilite corretamente o servico `snapd.apparmor`.

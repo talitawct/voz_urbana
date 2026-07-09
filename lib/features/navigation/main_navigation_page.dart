@@ -26,10 +26,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
     _screens = [
       MapScreen(onToggleTheme: widget.onThemeToggle),
-
-      // 🔥 IMPORTANTE: impedir retorno externo
       const ReportScreen(),
-
       const FeedScreen(),
     ];
   }
@@ -37,7 +34,6 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      // 🔴 impede voltar para Welcome
       canPop: false,
       child: Scaffold(
         body: _screens[_currentIndex],

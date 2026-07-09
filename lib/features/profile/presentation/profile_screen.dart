@@ -13,13 +13,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  
-  // Variáveis para Estado e Cidade (integrando com a lógica do IBGE do Cláudio)
+
   String? _selectedState;
   String? _selectedCity;
 
-  // Lista fictícia para simular o comportamento. Quando você pegar o código do Cláudio,
-  // basta plugar os mesmos métodos/Listas que ele usou na signup_screen.dart
   final List<String> _states = ['BA', 'SP', 'RJ', 'MG']; 
   final List<String> _cities = ['Salvador', 'Feira de Santana', 'São Paulo', 'Rio de Janeiro'];
 
@@ -32,8 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     _nameController.text = currentUser?.name ?? '';
     _phoneController.text = currentUser?.phone ?? '';
-    
-    // Valores iniciais padrão (você pode carregar do banco de dados futuramente)
+
     _selectedState = currentUser?.state ?? 'BA';
     _selectedCity = currentUser?.city ?? 'Salvador';
   }
@@ -81,13 +77,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Usando as cores do tema que o Cláudio definiu no main.dart para ficar harmonioso
     final primaryColor = Theme.of(context).primaryColor; 
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meu Perfil'),
-        backgroundColor: primaryColor, // Sincronizado com o padrão do app
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         centerTitle: true,
       ),
@@ -98,8 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             children: [
               const SizedBox(height: 16),
-              
-              // 🖼️ AVATAR DO USUÁRIO
+
               Stack(
                 children: [
                   CircleAvatar(
@@ -116,9 +110,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: IconButton(
                         icon: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
                         onPressed: () {
-                          // Aqui vai chamar a lógica de image_picker que o Cláudio implementou na report_screen.dart
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Abrindo a câmera/galeria com a lógica do Cláudio...')),
+                            const SnackBar(
+                              content: Text(
+                                'Foto de perfil disponível em uma próxima versão.',
+                              ),
+                            ),
                           );
                         },
                       ),
@@ -135,8 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               
               const SizedBox(height: 32),
-              
-              // 📇 CAMPO: NOME COMPLETO
+
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
@@ -153,8 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               
               const SizedBox(height: 20),
-              
-              // 📞 CAMPO: TELEFONE
+
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
@@ -168,10 +163,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               
               const SizedBox(height: 20),
 
-              // 📍 INTEGRAÇÃO LOCALIDADE (Alinhado com a signup_screen do seu colega)
               Row(
                 children: [
-                  // Estado (UF)
                   Expanded(
                     flex: 2,
                     child: DropdownButtonFormField<String>(
@@ -186,13 +179,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onChanged: (value) {
                         setState(() {
                           _selectedState = value;
-                          // Aqui você chama a função do Cláudio que atualiza as cidades com base no estado escolhido
                         });
                       },
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Cidade
                   Expanded(
                     flex: 5,
                     child: DropdownButtonFormField<String>(
@@ -215,8 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               
               const SizedBox(height: 40),
-              
-              // 💾 BOTÃO DE SALVAR ALTERAÇÕES
+
               SizedBox(
                 width: double.infinity,
                 height: 50,
