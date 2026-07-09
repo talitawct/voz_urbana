@@ -10,9 +10,10 @@ iluminacao, lixo acumulado, esgoto e outras ocorrencias de infraestrutura.
 - Captura de foto da denuncia com permissao de camera.
 - Captura automatica da localizacao com permissao de GPS.
 - Persistencia local das denuncias com SQLite.
-- Historico de denuncias salvas.
+- Historico de denuncias salvas com detalhes, protocolo, status e exclusao.
 - Mapa com Google Maps, localizacao atual e marcadores das denuncias salvas.
-- Envio de e-mail demonstrativo para `talitawct3@gmail.com` via FormSubmit.
+- Alteracao de status entre pendente e resolvido.
+- Envio de e-mail demonstrativo para `talitawct3@gmail.com` via FormSubmit com protocolo.
 - Tema claro/escuro e tela de perfil basica.
 
 ## Usuario de teste
@@ -57,4 +58,4 @@ habilite corretamente o servico `snapd.apparmor`.
 - Rodar `flutter analyze`.
 - Testar no dispositivo ou emulador com camera e localizacao habilitadas.
 - Fazer uma primeira denuncia para ativar/confirmar o FormSubmit no e-mail de destino.
-- Demonstrar o fluxo: login, foto, localizacao, categoria, envio, historico e mapa.
+- Demonstrar o fluxo: login, foto, localizacao, categoria, envio, protocolo, historico, status e mapa.

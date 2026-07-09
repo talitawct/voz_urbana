@@ -7,8 +7,9 @@ como buracos em vias, iluminacao publica, lixo acumulado, esgoto, arvores
 caidas e outros problemas de infraestrutura.
 
 O cidadao registra uma denuncia com foto, categoria, descricao e localizacao.
-Depois disso, o aplicativo salva a ocorrencia, exibe o registro no historico,
-mostra o ponto no mapa e envia um e-mail demonstrativo para o orgao responsavel.
+Depois disso, o aplicativo salva a ocorrencia com protocolo, exibe o registro
+no historico, mostra o ponto no mapa e envia um e-mail demonstrativo para o
+orgao responsavel.
 
 ## Requisitos atendidos
 
@@ -17,12 +18,14 @@ mostra o ponto no mapa e envia um e-mail demonstrativo para o orgao responsavel.
 - Resolve um problema real de comunicacao entre cidadaos e orgaos publicos.
 - Centraliza denuncia, localizacao, foto, historico e mapa em um unico fluxo.
 - Simula o encaminhamento automatico para o orgao responsavel por e-mail.
+- Permite acompanhar status e protocolo da ocorrencia registrada.
 
 ### Persistencia de dados
 
 - As denuncias sao salvas localmente usando SQLite.
 - O historico consulta os registros persistidos.
 - O mapa reutiliza as denuncias salvas para exibir marcadores reais.
+- O usuario pode alterar status e excluir registros locais de teste.
 
 ### Recursos do dispositivo
 
@@ -36,6 +39,7 @@ mostra o ponto no mapa e envia um e-mail demonstrativo para o orgao responsavel.
 - Fluxo principal organizado em tres abas: mapa, denuncia e historico.
 - Login/cadastro demonstrativos com validacoes minimas.
 - Mensagens de erro e sucesso para camera, localizacao, cadastro, login e envio.
+- Historico com detalhes da denuncia, foto, protocolo, status e acoes.
 - Tema claro/escuro.
 - Estado de carregamento em acoes demoradas, como foto, localizacao e envio.
 
@@ -48,9 +52,11 @@ mostra o ponto no mapa e envia um e-mail demonstrativo para o orgao responsavel.
 5. Selecionar a categoria da denuncia.
 6. Informar uma descricao opcional.
 7. Enviar a denuncia.
-8. Conferir a denuncia na aba `Historico`.
-9. Conferir o marcador da denuncia na aba `Mapa`.
-10. Verificar o envio demonstrativo para `talitawct3@gmail.com`.
+8. Conferir o protocolo gerado.
+9. Conferir a denuncia na aba `Historico`.
+10. Abrir os detalhes, alterar o status e observar o badge visual.
+11. Conferir o marcador da denuncia na aba `Mapa`.
+12. Verificar o envio demonstrativo para `talitawct3@gmail.com`.
 
 ## Configuracoes externas necessarias
 
