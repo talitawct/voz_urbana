@@ -3,6 +3,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../core/auth/auth_service.dart';
+import '../../../core/reports/report_repository.dart';
+import '../../../core/reports/urban_report.dart';
 import '../../settings/presentation/settings_screen.dart';
 
 class MapScreen extends StatefulWidget {
@@ -22,9 +24,11 @@ class _MapScreenState extends State<MapScreen> {
 
   GoogleMapController? _mapController;
   LatLng _currentLocation = _fallbackLocation;
+  List<UrbanReport> _reports = [];
   String? _locationError;
   bool _hasLocationPermission = false;
   bool _isLoadingLocation = true;
+  bool _isLoadingReports = true;
 
   Set<Marker> get _markers => {
         Marker(
@@ -36,29 +40,14 @@ class _MapScreenState extends State<MapScreen> {
           ),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
         ),
-        const Marker(
-          markerId: MarkerId('buraco_av_principal'),
-          position: LatLng(-12.9813, -38.5108),
-          infoWindow: InfoWindow(
-            title: 'Buraco na Av. Principal',
-            snippet: 'Status: Urgente (Pendente)',
-          ),
-        ),
-        Marker(
-          markerId: const MarkerId('poste_rua_4'),
-          position: const LatLng(-12.9737, -38.4972),
-          infoWindow: const InfoWindow(
-            title: 'Poste sem luz na Rua 4',
-            snippet: 'Status: Resolvido',
-          ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        ),
+        ..._reports.map(_reportMarker),
       };
 
   @override
   void initState() {
     super.initState();
     _loadCurrentLocation();
+    _loadReports();
   }
 
   @override
@@ -146,6 +135,60 @@ class _MapScreenState extends State<MapScreen> {
         });
       }
     }
+  }
+
+  Future<void> _loadReports() async {
+    setState(() {
+      _isLoadingReports = true;
+    });
+
+    try {
+      final reports = await ReportRepository.findAll();
+
+      if (!mounted) return;
+
+      setState(() {
+        _reports = reports;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível carregar as denúncias no mapa.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingReports = false;
+        });
+      }
+    }
+  }
+
+  Marker _reportMarker(UrbanReport report) {
+    return Marker(
+      markerId: MarkerId(
+        'denuncia_${report.id ?? report.createdAt.microsecondsSinceEpoch}',
+      ),
+      position: LatLng(report.latitude, report.longitude),
+      infoWindow: InfoWindow(
+        title: report.category,
+        snippet: 'Status: ${report.status}',
+      ),
+      icon: BitmapDescriptor.defaultMarkerWithHue(
+        _markerHue(report.status),
+      ),
+    );
+  }
+
+  double _markerHue(String status) {
+    if (status.toLowerCase() == 'resolvido') {
+      return BitmapDescriptor.hueGreen;
+    }
+
+    return BitmapDescriptor.hueRed;
   }
 
   void _setLocationFallback(String message) {
@@ -257,23 +300,67 @@ class _MapScreenState extends State<MapScreen> {
           Positioned(
             right: 16,
             bottom: 24,
-            child: FloatingActionButton(
-              heroTag: 'centralizar_mapa',
-              backgroundColor: const Color(0xFF0033A0),
-              foregroundColor: Colors.white,
-              onPressed: _isLoadingLocation ? null : _loadCurrentLocation,
-              child: _isLoadingLocation
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.my_location),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'atualizar_denuncias_mapa',
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF0033A0),
+                  onPressed: _isLoadingReports ? null : _loadReports,
+                  child: _isLoadingReports
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(Icons.refresh),
+                ),
+                const SizedBox(height: 12),
+                FloatingActionButton(
+                  heroTag: 'centralizar_mapa',
+                  backgroundColor: const Color(0xFF0033A0),
+                  foregroundColor: Colors.white,
+                  onPressed: _isLoadingLocation ? null : _loadCurrentLocation,
+                  child: _isLoadingLocation
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.my_location),
+                ),
+              ],
             ),
           ),
+          if (_reports.isEmpty && !_isLoadingReports)
+            Positioned(
+              left: 16,
+              right: 96,
+              bottom: 24,
+              child: IgnorePointer(
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Material(
+                    elevation: 3,
+                    borderRadius: BorderRadius.circular(8),
+                    color: Theme.of(context).cardColor,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        'Nenhuma denúncia salva para exibir no mapa.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
