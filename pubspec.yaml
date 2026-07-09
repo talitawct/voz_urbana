@@ -13,21 +13,16 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
-  # Recursos do Dispositivo e Mapa (Exigidos pela professora)
-  camera: ^0.12.0+1
+  # Recursos do dispositivo e mapa
   geolocator: ^11.1.0
   google_maps_flutter: ^2.6.0
 
-  # Banco de Dados e Persistência
+  # Banco de dados e persistência
   sqflite: ^2.3.0
   path: ^1.9.0
-  cloud_firestore: ^4.15.1
-  firebase_core: ^2.25.4
 
-  # Bônus (IA e APIs externas)
-  tflite_flutter: ^0.10.4
+  # APIs externas
   http: ^1.6.0
-  firebase_auth: ^4.16.0
 
 dev_dependencies:
   flutter_test:
