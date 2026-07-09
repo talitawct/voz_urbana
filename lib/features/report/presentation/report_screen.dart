@@ -206,12 +206,22 @@ class _ReportScreenState extends State<ReportScreen> {
         createdAt: DateTime.now(),
       );
 
-      await ReportRepository.save(report);
+      final reportId = await ReportRepository.save(report);
+      final savedReport = UrbanReport(
+        id: reportId,
+        category: report.category,
+        description: report.description,
+        imagePath: report.imagePath,
+        latitude: report.latitude,
+        longitude: report.longitude,
+        status: report.status,
+        createdAt: report.createdAt,
+      );
 
       var emailSent = true;
 
       try {
-        await EmailService.sendReportEmail(report);
+        await EmailService.sendReportEmail(savedReport);
       } catch (_) {
         emailSent = false;
       }
@@ -228,8 +238,8 @@ class _ReportScreenState extends State<ReportScreen> {
         SnackBar(
           content: Text(
             emailSent
-                ? 'Denúncia salva e e-mail enviado ao órgão responsável.'
-                : 'Denúncia salva, mas não foi possível enviar o e-mail.',
+                ? 'Denúncia #$reportId salva e e-mail enviado.'
+                : 'Denúncia #$reportId salva, mas o e-mail falhou.',
           ),
         ),
       );

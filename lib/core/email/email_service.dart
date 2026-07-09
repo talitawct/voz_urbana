@@ -23,8 +23,10 @@ class EmailService {
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
-            '_subject': 'Nova denúncia Voz Urbana - ${report.category}',
+            '_subject':
+                'Nova denúncia Voz Urbana #${report.id ?? 'sem-protocolo'} - ${report.category}',
             '_captcha': 'false',
+            'protocolo': report.id == null ? 'Não informado' : '#${report.id}',
             'categoria': report.category,
             'status': report.status,
             'descricao': report.description.isEmpty
