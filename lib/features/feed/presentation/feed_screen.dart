@@ -53,6 +53,10 @@ class _FeedScreenState extends State<FeedScreen> {
     return '$day/$month/$year às $hour:$minute';
   }
 
+  String _protocol(UrbanReport report) {
+    return report.id == null ? 'Sem protocolo' : '#${report.id}';
+  }
+
   void _showReportDetails(UrbanReport report) {
     final imageFile = File(report.imagePath);
 
@@ -70,7 +74,7 @@ class _FeedScreenState extends State<FeedScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  report.category,
+                  '${_protocol(report)} - ${report.category}',
                   style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -297,7 +301,7 @@ class _FeedScreenState extends State<FeedScreen> {
                       size: 40,
                     ),
                     title: Text(
-                      report.category,
+                      '${_protocol(report)} - ${report.category}',
                       style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
