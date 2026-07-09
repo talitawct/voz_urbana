@@ -18,17 +18,12 @@ class MainNavigationPage extends StatefulWidget {
 class _MainNavigationPageState extends State<MainNavigationPage> {
   int _currentIndex = 0;
 
-  late final List<Widget> _screens;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _screens = [
-      MapScreen(onToggleTheme: widget.onThemeToggle),
-      const ReportScreen(),
-      const FeedScreen(),
-    ];
+  Widget _buildCurrentScreen() {
+    return switch (_currentIndex) {
+      0 => MapScreen(onToggleTheme: widget.onThemeToggle),
+      1 => const ReportScreen(),
+      _ => const FeedScreen(),
+    };
   }
 
   @override
@@ -36,7 +31,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        body: _screens[_currentIndex],
+        body: _buildCurrentScreen(),
 
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
