@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/auth/auth_service.dart';
 import '../../settings/presentation/settings_screen.dart';
 
 class MapScreen extends StatelessWidget {
@@ -24,6 +25,7 @@ class MapScreen extends StatelessWidget {
         break;
 
       case 'logout':
+        AuthService.signOut();
         Navigator.pushReplacementNamed(context, '/login');
         break;
     }

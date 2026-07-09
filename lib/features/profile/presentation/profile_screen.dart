@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../../core/auth/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,18 +23,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final List<String> _states = ['BA', 'SP', 'RJ', 'MG']; 
   final List<String> _cities = ['Salvador', 'Feira de Santana', 'São Paulo', 'Rio de Janeiro'];
 
-  final User? _currentUser = FirebaseAuth.instance.currentUser;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController.text = _currentUser?.displayName ?? '';
-    _phoneController.text = _currentUser?.phoneNumber ?? '';
+    final currentUser = AuthService.currentUser;
+
+    _nameController.text = currentUser?.name ?? '';
+    _phoneController.text = currentUser?.phone ?? '';
     
     // Valores iniciais padrão (você pode carregar do banco de dados futuramente)
-    _selectedState = 'BA';
-    _selectedCity = 'Salvador';
+    _selectedState = currentUser?.state ?? 'BA';
+    _selectedCity = currentUser?.city ?? 'Salvador';
   }
 
   Future<void> _saveProfileChanges() async {
@@ -42,8 +44,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isSaving = true);
 
     try {
-      await _currentUser?.updateDisplayName(_nameController.text.trim());
-      await _currentUser?.reload();
+      await AuthService.updateProfile(
+        name: _nameController.text,
+        phone: _phoneController.text,
+        state: _selectedState ?? 'BA',
+        city: _selectedCity ?? 'Salvador',
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -53,10 +59,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       }
-    } catch (e) {
+    } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar alterações: $e')),
+          SnackBar(content: Text('Erro ao salvar alterações: ${e.message}')),
         );
       }
     } finally {
@@ -124,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 12),
               
               Text(
-                _currentUser?.email ?? 'usuario@email.com',
+                AuthService.currentUser?.email ?? 'usuario@email.com',
                 style: TextStyle(fontSize: 16, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
               ),
               

@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'success_screen.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
+
+import '../../core/auth/auth_service.dart';
 import 'signin_screen.dart';
+import 'success_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   final Function(bool) onThemeToggle;
@@ -43,6 +46,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _showPassword = false;
   bool _showConfirmPassword = false;
   bool _acceptTerms = false;
+  bool _isSaving = false;
 
   String? _selectedState;
   String? _selectedCity;
@@ -542,20 +546,49 @@ const SizedBox(height: 20),
                   width: 250,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: _acceptTerms
-                      ? () {
-                          if (_formKey.currentState!.validate()) {
+                    onPressed: _acceptTerms && !_isSaving
+                      ? () async {
+                          if (!_formKey.currentState!.validate()) return;
+
+                          setState(() {
+                            _isSaving = true;
+                          });
+
+                          try {
+                            await AuthService.register(
+                              name: _nameController.text,
+                              email: _emailController.text,
+                              password: _passwordController.text,
+                              phone: _phoneController.text,
+                              state: _selectedState ?? 'BA',
+                              city: _selectedCity ?? 'Salvador',
+                            );
+
+                            if (!context.mounted) return;
+
                             Navigator.pushReplacement(
                               context,
-                            MaterialPageRoute(
-                              builder: (context) => SuccessScreen(
-                                onThemeToggle: widget.onThemeToggle,
+                              MaterialPageRoute(
+                                builder: (context) => SuccessScreen(
+                                  onThemeToggle: widget.onThemeToggle,
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          } on AuthException catch (error) {
+                            if (!context.mounted) return;
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(error.message)),
+                            );
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                _isSaving = false;
+                              });
+                            }
+                          }
                         }
-                      }
-                    : null,
+                      : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0033A0),
                       foregroundColor: Colors.white,
@@ -564,13 +597,22 @@ const SizedBox(height: 20),
                         borderRadius: BorderRadius.circular(25),
                       ),
                     ),
-                    child: const Text(
-                      'Cadastrar',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Cadastrar',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
               ),
