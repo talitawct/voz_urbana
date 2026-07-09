@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/reports/report_repository.dart';
@@ -45,6 +47,76 @@ class _FeedScreenState extends State<FeedScreen> {
     final minute = date.minute.toString().padLeft(2, '0');
 
     return '$day/$month/$year às $hour:$minute';
+  }
+
+  void _showReportDetails(UrbanReport report) {
+    final imageFile = File(report.imagePath);
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final textTheme = Theme.of(context).textTheme;
+
+        return SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  report.category,
+                  style: textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: imageFile.existsSync()
+                      ? Image.file(
+                          imageFile,
+                          height: 220,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          height: 140,
+                          color: Theme.of(context).dividerColor,
+                          alignment: Alignment.center,
+                          child: const Text('Foto indisponível'),
+                        ),
+                ),
+                const SizedBox(height: 16),
+                _DetailRow(
+                  icon: Icons.flag,
+                  label: 'Status',
+                  value: report.status,
+                ),
+                _DetailRow(
+                  icon: Icons.schedule,
+                  label: 'Criada em',
+                  value: _formatDate(report.createdAt),
+                ),
+                _DetailRow(
+                  icon: Icons.location_on,
+                  label: 'Localização',
+                  value:
+                      '${report.latitude.toStringAsFixed(6)}, ${report.longitude.toStringAsFixed(6)}',
+                ),
+                _DetailRow(
+                  icon: Icons.notes,
+                  label: 'Descrição',
+                  value: report.description.isEmpty
+                      ? 'Sem descrição informada.'
+                      : report.description,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -138,12 +210,64 @@ class _FeedScreenState extends State<FeedScreen> {
                       style: textTheme.bodyMedium,
                     ),
                     isThreeLine: true,
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _showReportDetails(report),
                   ),
                 );
               },
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: const Color(0xFF0033A0),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
