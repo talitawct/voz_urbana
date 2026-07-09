@@ -39,6 +39,10 @@ class _FeedScreenState extends State<FeedScreen> {
     };
   }
 
+  Color _statusColor(String status) {
+    return status == 'Resolvido' ? Colors.green.shade700 : Colors.red.shade700;
+  }
+
   String _formatDate(DateTime date) {
     final day = date.day.toString().padLeft(2, '0');
     final month = date.month.toString().padLeft(2, '0');
@@ -298,15 +302,27 @@ class _FeedScreenState extends State<FeedScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    subtitle: Text(
-                      [
-                        'Status: ${report.status}',
-                        'Criada em ${_formatDate(report.createdAt)}',
-                        'Local: ${report.latitude.toStringAsFixed(5)}, ${report.longitude.toStringAsFixed(5)}',
-                        if (report.description.isNotEmpty)
-                          'Descrição: ${report.description}',
-                      ].join('\n'),
-                      style: textTheme.bodyMedium,
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _StatusBadge(
+                            status: report.status,
+                            color: _statusColor(report.status),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            [
+                              'Criada em ${_formatDate(report.createdAt)}',
+                              'Local: ${report.latitude.toStringAsFixed(5)}, ${report.longitude.toStringAsFixed(5)}',
+                              if (report.description.isNotEmpty)
+                                'Descrição: ${report.description}',
+                            ].join('\n'),
+                            style: textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
                     ),
                     isThreeLine: true,
                     trailing: const Icon(Icons.chevron_right),
@@ -367,6 +383,37 @@ class _DetailRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({
+    required this.status,
+    required this.color,
+  });
+
+  final String status;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.withAlpha(24),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        child: Text(
+          status,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+        ),
       ),
     );
   }
