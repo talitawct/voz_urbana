@@ -16,8 +16,8 @@ class MapScreen extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => SettingsScreen(
-                onThemeToggle: onToggleTheme, // CORRIGIDO: Removido o 'widget.'
-                isDarkMode: Theme.of(context).brightness == Brightness.dark,
+              onThemeToggle: onToggleTheme,
+              isDarkMode: Theme.of(context).brightness == Brightness.dark,
             ),
           ),
         );
