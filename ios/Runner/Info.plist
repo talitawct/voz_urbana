@@ -20,6 +20,8 @@
 	<string>APPL</string>
 	<key>NSCameraUsageDescription</key>
 	<string>O Voz Urbana precisa acessar a câmera para anexar fotos às denúncias registradas.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>O Voz Urbana precisa acessar sua localização para indicar onde o problema urbano foi encontrado.</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
