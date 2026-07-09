@@ -51,7 +51,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _selectedState;
   String? _selectedCity;
 
-  List<String> states = [];
+  static const Map<String, List<String>> _fallbackCities = {
+    'BA': ['Salvador', 'Feira de Santana', 'Vitória da Conquista'],
+    'SP': ['São Paulo', 'Campinas', 'Santos'],
+    'RJ': ['Rio de Janeiro', 'Niterói', 'Petrópolis'],
+    'MG': ['Belo Horizonte', 'Uberlândia', 'Contagem'],
+  };
+
+  List<String> states = _fallbackCities.keys.toList();
   List<String> cities = [];
 
   @override
@@ -61,14 +68,14 @@ void initState() {
 }
 
 Future<void> carregarEstados() async {
+  try {
+    final response = await http.get(
+      Uri.parse(
+        'https://servicodados.ibge.gov.br/api/v1/localidades/estados',
+      ),
+    );
 
-  final response = await http.get(
-    Uri.parse(
-      'https://servicodados.ibge.gov.br/api/v1/localidades/estados',
-    ),
-  );
-
-  if (response.statusCode == 200) {
+    if (response.statusCode != 200 || !mounted) return;
 
     final List dados = json.decode(response.body);
 
@@ -77,41 +84,53 @@ Future<void> carregarEstados() async {
     );
 
     setState(() {
-
       states = dados
           .map<String>((e) => e['sigla'].toString())
           .toList();
-
     });
+  } catch (_) {
+    if (!mounted) return;
 
+    setState(() {
+      states = _fallbackCities.keys.toList();
+    });
   }
-
 }
 
 Future<void> carregarCidades(String uf) async {
+  try {
+    final response = await http.get(
+      Uri.parse(
+        'https://servicodados.ibge.gov.br/api/v1/localidades/estados/$uf/municipios',
+      ),
+    );
 
-  final response = await http.get(
-    Uri.parse(
-      'https://servicodados.ibge.gov.br/api/v1/localidades/estados/$uf/municipios',
-    ),
-  );
-
-  if (response.statusCode == 200) {
+    if (response.statusCode != 200 || !mounted) {
+      _usarCidadesFallback(uf);
+      return;
+    }
 
     final List dados = json.decode(response.body);
 
     setState(() {
-
       cities = dados
           .map<String>((e) => e['nome'].toString())
           .toList();
 
       _selectedCity = null;
-
     });
-
+  } catch (_) {
+    _usarCidadesFallback(uf);
   }
+}
 
+void _usarCidadesFallback(String uf) {
+  if (!mounted) return;
+
+  setState(() {
+    cities = _fallbackCities[uf] ?? const ['Cidade não informada'];
+    _selectedCity = null;
+  });
 }
 
   @override
