@@ -49,3 +49,12 @@ flutter run
 No ambiente atual, a instalacao local do Flutter via Snap pode bloquear comandos
 com erro de AppArmor. Nesse caso, use uma instalacao Flutter fora do Snap ou
 habilite corretamente o servico `snapd.apparmor`.
+
+## Checklist para apresentacao
+
+- Trocar a chave `SUA_CHAVE_GOOGLE_MAPS_AQUI` por uma chave real.
+- Rodar `flutter pub get`.
+- Rodar `flutter analyze`.
+- Testar no dispositivo ou emulador com camera e localizacao habilitadas.
+- Fazer uma primeira denuncia para ativar/confirmar o FormSubmit no e-mail de destino.
+- Demonstrar o fluxo: login, foto, localizacao, categoria, envio, historico e mapa.

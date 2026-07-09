@@ -38,8 +38,8 @@ class UrbanReport {
       category: map['category'] as String,
       description: map['description'] as String,
       imagePath: map['image_path'] as String,
-      latitude: map['latitude'] as double,
-      longitude: map['longitude'] as double,
+      latitude: (map['latitude'] as num).toDouble(),
+      longitude: (map['longitude'] as num).toDouble(),
       status: map['status'] as String,
       createdAt: DateTime.parse(map['created_at'] as String),
     );
