@@ -56,16 +56,16 @@ orgao responsavel.
 9. Conferir a denuncia na aba `Historico`.
 10. Abrir os detalhes, alterar o status e observar o badge visual.
 11. Conferir o marcador da denuncia na aba `Mapa`.
-12. Verificar o envio demonstrativo para `talitawct3@gmail.com`.
+12. Verificar o envio demonstrativo para o e-mail definido pela categoria.
 
 ## Configuracoes externas necessarias
 
 - Confirmar conexao com internet para carregar o mapa OpenStreetMap.
-- Confirmar o primeiro e-mail recebido pelo FormSubmit, caso a plataforma solicite.
+- Rodar o app com a chave do Web3Forms configurada em arquivo local nao versionado ou por `--dart-define`.
 - Rodar o app em dispositivo/emulador com camera e localizacao habilitadas.
 
 ## Limitacoes assumidas por pragmatismo
 
 - Google e Gov.br usam login demonstrativo com usuarios predefinidos.
-- O envio de e-mail usa FormSubmit, sem backend proprio.
+- O envio de e-mail usa Web3Forms, sem backend proprio, com roteamento demonstrativo por categoria.
 - As denuncias sao persistidas localmente no dispositivo, nao em servidor remoto.

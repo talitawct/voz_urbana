@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
@@ -20,7 +18,8 @@ class _ReportScreenState extends State<ReportScreen> {
   final ImagePicker _picker = ImagePicker();
   final _descriptionController = TextEditingController();
 
-  File? _image;
+  String? _imagePath;
+  Uint8List? _imageBytes;
   String? _categoria;
   Position? _currentPosition;
   String _locationStatus = 'Obtendo localização atual...';
@@ -57,8 +56,13 @@ class _ReportScreenState extends State<ReportScreen> {
       if (!mounted) return;
 
       if (foto != null) {
+        final imageBytes = await foto.readAsBytes();
+
+        if (!mounted) return;
+
         setState(() {
-          _image = File(foto.path);
+          _imagePath = foto.path;
+          _imageBytes = imageBytes;
         });
       }
     } on PlatformException catch (error) {
@@ -160,11 +164,11 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   Future<void> _enviarDenuncia() async {
-    final image = _image;
+    final imagePath = _imagePath;
     final category = _categoria;
     final position = _currentPosition;
 
-    if (image == null) {
+    if (imagePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Tire uma foto antes de enviar a denúncia.'),
@@ -199,7 +203,7 @@ class _ReportScreenState extends State<ReportScreen> {
       final report = UrbanReport(
         category: category,
         description: _descriptionController.text.trim(),
-        imagePath: image.path,
+        imagePath: imagePath,
         latitude: position.latitude,
         longitude: position.longitude,
         status: 'Pendente',
@@ -218,18 +222,22 @@ class _ReportScreenState extends State<ReportScreen> {
         createdAt: report.createdAt,
       );
 
-      var emailSent = true;
+      String? recipientEmail;
+      String? emailError;
 
       try {
-        await EmailService.sendReportEmail(savedReport);
-      } catch (_) {
-        emailSent = false;
+        recipientEmail = await EmailService.sendReportEmail(savedReport);
+      } on EmailException catch (error) {
+        emailError = error.message;
+      } catch (error) {
+        emailError = error.toString();
       }
 
       if (!mounted) return;
 
       setState(() {
-        _image = null;
+        _imagePath = null;
+        _imageBytes = null;
         _categoria = null;
         _descriptionController.clear();
       });
@@ -237,18 +245,22 @@ class _ReportScreenState extends State<ReportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            emailSent
-                ? 'Denúncia #$reportId salva e e-mail enviado.'
-                : 'Denúncia #$reportId salva, mas o e-mail falhou.',
+            recipientEmail != null
+                ? 'Denúncia #$reportId salva e enviada para $recipientEmail.'
+                : 'Denúncia #$reportId salva, mas o e-mail não foi enviado. $emailError',
           ),
+          duration: const Duration(seconds: 5),
         ),
       );
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Não foi possível salvar a denúncia. Tente novamente.'),
+        SnackBar(
+          content: Text(
+            'Não foi possível salvar a denúncia. ${error.toString()}',
+          ),
+          duration: const Duration(seconds: 6),
         ),
       );
     } finally {
@@ -267,14 +279,12 @@ class _ReportScreenState extends State<ReportScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-
       appBar: AppBar(
         title: const Text('Nova Denúncia'),
         backgroundColor: const Color(0xFF0033A0),
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
-
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(30),
@@ -282,7 +292,7 @@ class _ReportScreenState extends State<ReportScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
-                child: _image == null
+                child: _imageBytes == null
                     ? Image.asset(
                         isDark
                             ? 'assets/images/photodark.png'
@@ -292,24 +302,20 @@ class _ReportScreenState extends State<ReportScreen> {
                       )
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.file(
-                          _image!,
+                        child: Image.memory(
+                          _imageBytes!,
                           height: 220,
                           fit: BoxFit.cover,
                         ),
                       ),
               ),
-
               const SizedBox(height: 20),
-
               Text(
                 'Posicione corretamente seu smartphone para tirar uma boa foto. O sistema solicitará sua permissão para acessar a câmera.',
                 textAlign: TextAlign.center,
                 style: textTheme.bodyMedium,
               ),
-
               const SizedBox(height: 30),
-
               Center(
                 child: SizedBox(
                   width: 250,
@@ -339,9 +345,7 @@ class _ReportScreenState extends State<ReportScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 30),
-
               DropdownButtonFormField<String>(
                 initialValue: _categoria,
                 decoration: const InputDecoration(
@@ -384,9 +388,7 @@ class _ReportScreenState extends State<ReportScreen> {
                   });
                 },
               ),
-
               const SizedBox(height: 30),
-
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -447,30 +449,25 @@ class _ReportScreenState extends State<ReportScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 30),
-
               Text(
                 'Descrição do problema',
                 style: textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 8),
-
               TextField(
                 controller: _descriptionController,
                 maxLines: 3,
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
-                  hintText: 'Informe detalhes que possam auxiliar na análise da denúncia. (opcional)',
+                  hintText:
+                      'Informe detalhes que possam auxiliar na análise da denúncia. (opcional)',
                   hintStyle: textTheme.bodySmall,
                 ),
               ),
-
               const SizedBox(height: 30),
-
               Center(
                 child: SizedBox(
                   width: 250,

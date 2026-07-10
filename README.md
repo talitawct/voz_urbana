@@ -13,7 +13,7 @@ iluminacao, lixo acumulado, esgoto e outras ocorrencias de infraestrutura.
 - Historico de denuncias salvas com detalhes, protocolo, status e exclusao.
 - Mapa com OpenStreetMap, localizacao atual e marcadores das denuncias salvas.
 - Alteracao de status entre pendente e resolvido.
-- Envio de e-mail demonstrativo para `talitawct3@gmail.com` via FormSubmit com protocolo.
+- Envio de e-mail demonstrativo via Web3Forms com protocolo e roteamento por categoria.
 - Tema claro/escuro e tela de perfil basica.
 
 ## Usuario de teste
@@ -33,8 +33,38 @@ Para carregar os tiles, o dispositivo precisa estar conectado a internet.
 
 ## Observacao sobre envio de e-mail
 
-O envio usa FormSubmit para manter o projeto simples e sem backend. No primeiro
-envio, o destinatario pode precisar confirmar a ativacao recebida por e-mail.
+O envio usa Web3Forms para manter o projeto simples e sem backend. A chave deve
+ficar em um arquivo local nao versionado:
+
+- Arquivo local: `lib/core/config/local_secrets.dart`
+- Modelo sem segredo: `lib/core/config/local_secrets.example.dart`
+
+Como alternativa, a chave tambem pode ser informada por `--dart-define`:
+
+```bash
+flutter run --dart-define=WEB3FORMS_ACCESS_KEY=SUA_CHAVE_AQUI
+```
+
+Para roteamento real entre dois destinatarios, use uma chave por e-mail:
+
+```bash
+flutter run \
+  --dart-define=WEB3FORMS_INFRASTRUCTURE_ACCESS_KEY=CHAVE_TALITA \
+  --dart-define=WEB3FORMS_SANITATION_ACCESS_KEY=CHAVE_CLAUDIO
+```
+
+Categorias encaminhadas para `talitawct3@gmail.com`:
+
+- Buraco na via
+- Poste danificado
+- Iluminacao publica
+- Lixo acumulado
+
+Categorias encaminhadas para `claudio.vieira@ufba.br`:
+
+- Esgoto
+- Arvore caida
+- Outro
 
 ## Execucao
 
@@ -51,7 +81,7 @@ habilite corretamente o servico `snapd.apparmor`.
 
 - Rodar `flutter pub get`.
 - Rodar `flutter analyze`.
+- Rodar o app com a chave Web3Forms por `--dart-define`.
 - Confirmar conexao com internet para carregar o mapa OpenStreetMap.
 - Testar no dispositivo ou emulador com camera e localizacao habilitadas.
-- Fazer uma primeira denuncia para ativar/confirmar o FormSubmit no e-mail de destino.
 - Demonstrar o fluxo: login, foto, localizacao, categoria, envio, protocolo, historico, status e mapa.

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/reports/report_repository.dart';
@@ -58,8 +59,6 @@ class _FeedScreenState extends State<FeedScreen> {
   }
 
   void _showReportDetails(UrbanReport report) {
-    final imageFile = File(report.imagePath);
-
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -80,21 +79,7 @@ class _FeedScreenState extends State<FeedScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: imageFile.existsSync()
-                      ? Image.file(
-                          imageFile,
-                          height: 220,
-                          fit: BoxFit.cover,
-                        )
-                      : Container(
-                          height: 140,
-                          color: Theme.of(context).dividerColor,
-                          alignment: Alignment.center,
-                          child: const Text('Foto indisponível'),
-                        ),
-                ),
+                _ReportImagePreview(imagePath: report.imagePath),
                 const SizedBox(height: 16),
                 _DetailRow(
                   icon: Icons.flag,
@@ -338,6 +323,52 @@ class _FeedScreenState extends State<FeedScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+class _ReportImagePreview extends StatelessWidget {
+  const _ReportImagePreview({required this.imagePath});
+
+  final String imagePath;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: kIsWeb ? _webImage(context) : _deviceImage(context),
+    );
+  }
+
+  Widget _webImage(BuildContext context) {
+    if (imagePath.isEmpty) return _unavailableImage(context);
+
+    return Image.network(
+      imagePath,
+      height: 220,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => _unavailableImage(context),
+    );
+  }
+
+  Widget _deviceImage(BuildContext context) {
+    final imageFile = File(imagePath);
+
+    if (!imageFile.existsSync()) return _unavailableImage(context);
+
+    return Image.file(
+      imageFile,
+      height: 220,
+      fit: BoxFit.cover,
+    );
+  }
+
+  Widget _unavailableImage(BuildContext context) {
+    return Container(
+      height: 140,
+      color: Theme.of(context).dividerColor,
+      alignment: Alignment.center,
+      child: const Text('Foto indisponível'),
     );
   }
 }
