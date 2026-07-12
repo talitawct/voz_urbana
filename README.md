@@ -1,87 +1,91 @@
 # Voz Urbana
 
-Aplicativo Flutter para registro de problemas urbanos como buracos, falta de
-iluminacao, lixo acumulado, esgoto e outras ocorrencias de infraestrutura.
+O **Voz Urbana** é um aplicativo mobile desenvolvido em **Flutter** com o objetivo de facilitar o registro e o acompanhamento de problemas urbanos. A aplicação permite que cidadãos relatem ocorrências, como buracos nas vias, iluminação pública defeituosa, descarte irregular de lixo e outros problemas de infraestrutura, contribuindo para uma comunicação mais eficiente entre a população e os órgãos responsáveis.
 
-## Recursos implementados
+## Funcionalidades
 
-- Cadastro e login demonstrativos com validacoes minimas.
-- Login rapido pelos botoes Google e Gov.br usando usuarios de teste.
-- Captura de foto da denuncia com permissao de camera.
-- Captura automatica da localizacao com permissao de GPS.
-- Persistencia local das denuncias com SQLite.
-- Historico de denuncias salvas com detalhes, protocolo, status e exclusao.
-- Mapa com OpenStreetMap, localizacao atual e marcadores das denuncias salvas.
-- Alteracao de status entre pendente e resolvido.
-- Envio de e-mail demonstrativo via Web3Forms com protocolo e roteamento por categoria.
-- Tema claro/escuro e tela de perfil basica.
+Atualmente, o aplicativo oferece as seguintes funcionalidades:
 
-## Usuario de teste
+* Cadastro e autenticação de usuários;
+* Registro de denúncias com fotografia;
+* Captura da localização do dispositivo;
+* Consulta de estados e municípios por meio da API de Localidades do IBGE;
+* Armazenamento local das denúncias utilizando SQLite;
+* Histórico das ocorrências registradas;
+* Visualização das denúncias em mapa utilizando OpenStreetMap;
+* Pesquisa de localidades por meio da API Nominatim;
+* Alteração do status das ocorrências;
+* Envio das denúncias por e-mail utilizando Web3Forms;
+* Alternância entre tema claro e tema escuro.
 
-Login por e-mail:
+## Tecnologias Utilizadas
 
-- E-mail: `teste@vozurbana.com`
-- Senha: `123456`
+* Flutter
+* Dart
+* SQLite
+* OpenStreetMap
+* Nominatim
+* API de Localidades do IBGE
+* Web3Forms
 
-Os botoes "Entrar com Google" e "Entrar com Gov.br" fazem login automatico com
-usuarios demonstrativos para apresentacao academica.
+## Estrutura do Projeto
 
-## Mapa com OpenStreetMap
+O projeto segue uma organização baseada em funcionalidades (**Feature First**), facilitando a manutenção e a evolução da aplicação.
 
-O mapa usa OpenStreetMap via `flutter_map`, sem necessidade de chave da Google.
-Para carregar os tiles, o dispositivo precisa estar conectado a internet.
-
-## Observacao sobre envio de e-mail
-
-O envio usa Web3Forms para manter o projeto simples e sem backend. A chave deve
-ficar em um arquivo local nao versionado:
-
-- Arquivo local: `lib/core/config/local_secrets.dart`
-- Modelo sem segredo: `lib/core/config/local_secrets.example.dart`
-
-Como alternativa, a chave tambem pode ser informada por `--dart-define`:
-
-```bash
-flutter run --dart-define=WEB3FORMS_ACCESS_KEY=SUA_CHAVE_AQUI
+```text
+lib/
+├── core/
+├── features/
+│   ├── auth/
+│   ├── map/
+│   ├── report/
+│   ├── feed/
+│   ├── settings/
+│   └── navigation/
+└── main.dart
 ```
 
-Para roteamento real entre dois destinatarios, use uma chave por e-mail:
+## Como Executar
 
-```bash
-flutter run \
-  --dart-define=WEB3FORMS_INFRASTRUCTURE_ACCESS_KEY=CHAVE_TALITA \
-  --dart-define=WEB3FORMS_SANITATION_ACCESS_KEY=CHAVE_CLAUDIO
-```
-
-Categorias encaminhadas para `talitawct3@gmail.com`:
-
-- Buraco na via
-- Poste danificado
-- Iluminacao publica
-- Lixo acumulado
-
-Categorias encaminhadas para `claudio.vieira@ufba.br`:
-
-- Esgoto
-- Arvore caida
-- Outro
-
-## Execucao
+Clone o repositório e instale as dependências:
 
 ```bash
 flutter pub get
+```
+
+Em seguida, execute o aplicativo:
+
+```bash
 flutter run
 ```
 
-No ambiente atual, a instalacao local do Flutter via Snap pode bloquear comandos
-com erro de AppArmor. Nesse caso, use uma instalacao Flutter fora do Snap ou
-habilite corretamente o servico `snapd.apparmor`.
+## APIs e Serviços Utilizados
 
-## Checklist para apresentacao
+O aplicativo integra diferentes serviços para disponibilizar suas funcionalidades:
 
-- Rodar `flutter pub get`.
-- Rodar `flutter analyze`.
-- Rodar o app com a chave Web3Forms por `--dart-define`.
-- Confirmar conexao com internet para carregar o mapa OpenStreetMap.
-- Testar no dispositivo ou emulador com camera e localizacao habilitadas.
-- Demonstrar o fluxo: login, foto, localizacao, categoria, envio, protocolo, historico, status e mapa.
+* **API de Localidades do IBGE**: carregamento dinâmico de estados e municípios.
+* **OpenStreetMap**: exibição do mapa da aplicação.
+* **Nominatim**: pesquisa de endereços e localidades.
+* **Web3Forms**: envio das denúncias por e-mail.
+
+## Melhorias Futuras
+
+Entre as funcionalidades previstas para futuras versões destacam-se:
+
+* Autenticação completa utilizando Firebase;
+* Persistência das denúncias em banco de dados remoto;
+* Notificações em tempo real;
+* Acompanhamento do andamento das ocorrências;
+* Painel administrativo para gerenciamento das denúncias;
+* Melhorias na interface e na experiência do usuário.
+
+## Equipe
+
+Projeto desenvolvido por:
+
+* Talita Cruz
+* Cláudio Vieira
+
+## Licença
+
+Este projeto foi desenvolvido para fins acadêmicos como parte das atividades da Universidade Federal da Bahia (UFBA).
